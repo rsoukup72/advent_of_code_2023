@@ -15,7 +15,7 @@ public class Day01Part1 {
             int sum = 0;
 
             while ((line = reader.readLine()) != null) {
-                //replace lettered numbers with digital number
+                //replace lettered numbers with digital number (Day 1 Part 2)
                 line = replaceLetteredNumbers(line);
                 //replace all non-digit chars
                 String digitsFromString = line.replaceAll("[^0-9]", "");
