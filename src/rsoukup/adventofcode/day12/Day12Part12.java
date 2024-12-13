@@ -7,15 +7,19 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class Day12Part12 {
+    private static final Map<String, Long> cacheMap = new HashMap<>();
+
     public static void main(String[] args) throws Exception {
         Path filePath = Path.of("src/rsoukup/adventofcode/day12/input.txt");
 
         try (BufferedReader reader = Files.newBufferedReader(filePath, StandardCharsets.UTF_8)) {
             String line;
-            int sumArrangements = 0;
+            long sumArrangements = 0;
 
             while ((line = reader.readLine()) != null) {
                 // Part 1
@@ -24,10 +28,10 @@ public class Day12Part12 {
                 List<Integer> groups = Arrays.asList(parts[1].split(",")).stream().map(p -> Integer.valueOf(p)).toList();
 
                 // Part 2
-                recordToCount = String.join(recordToCount, "?", recordToCount, "?", recordToCount, "?", recordToCount, "?", recordToCount);
-                //groups.addAll(groups);
-                groups = expandedGroups(groups);
+                recordToCount = expandRecord(recordToCount);
+                groups = expandGroups(groups);
 
+                // Total
                 sumArrangements += countArrangements(recordToCount, groups);
             }
 
@@ -38,17 +42,21 @@ public class Day12Part12 {
         }
     }
 
-    private static int countArrangements(String recordToCount, List<Integer> groups) {
-        int arrangements = 0;
+    private static long countArrangements(String recordToCount, List<Integer> groups) {
+        String record = recordToCount + groups.toString();
+        
+        if (cacheMap.containsKey(record)) {
+            return cacheMap.get(record);
+        }
 
         if (recordToCount.isBlank()) { // recordToCount is completed (blank)
             // valid arrangement if groups is empty
             return groups.isEmpty() ? 1 : 0;
         }
-
+        long arrangements = 0;
         char firstChar = recordToCount.charAt(0);
 
-        if (firstChar == '.') { // working status, skip and truncate recordToCount from left, not groups!
+        if (firstChar == '.') { // functional status, skip and truncate recordToCount from left, not groups!
             arrangements = countArrangements(recordToCount.substring(1), groups);
         } else if (firstChar == '?') { // unknown status, we need to count it for both status (based on groups)
             arrangements = countArrangements("." + recordToCount.substring(1), groups)
@@ -62,7 +70,7 @@ public class Day12Part12 {
                 int numberOfDamagedSprings = groups.get(0);
                 // Condition: if number of damaged springs is lower or equal to the length of record to count
                 // and all springs from truncated recordToCount (by numberOfDamagedSprings as max size) are damaged or unknown
-                if (numberOfDamagedSprings <= recordToCount.length() && recordToCount.chars().limit(numberOfDamagedSprings).allMatch(c -> c == '#' || c == '?')) {
+                if (numberOfDamagedSprings <= recordToCount.length() && recordToCount.chars().limit(numberOfDamagedSprings).allMatch(s -> s == '#' || s == '?')) {
                     // truncate groups from left to new list
                     List<Integer> truncatedGroups = groups.subList(1, groups.size());
                     if (numberOfDamagedSprings == recordToCount.length()) { // The remaining record length is equal to the number of damaged springs in the group
@@ -85,10 +93,22 @@ public class Day12Part12 {
                 }
             }
         }
+        cacheMap.put(record, arrangements);
         return arrangements;
     }
 
-    private static List<Integer> expandedGroups(List<Integer> groups) {
+    private static String expandRecord(String recordToCount) {
+        String expandedRecord = "";
+        for (int i = 0; i < 5; i++) {
+            expandedRecord += recordToCount;
+            if (i < 4) {
+                expandedRecord += "?";
+            }
+        }
+        return expandedRecord;
+    }
+
+    private static List<Integer> expandGroups(List<Integer> groups) {
         List<Integer> expandedGroups = new ArrayList<>();
         for (int i = 0; i < 5; i++) {
             expandedGroups.addAll(groups);
